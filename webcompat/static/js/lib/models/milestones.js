@@ -4,8 +4,10 @@
 
 var issues = issues || {}; // eslint-disable-line no-use-before-define
 
+//should the milestone model be listening to issue model changes here and reacting here?
 issues.MilestonesModel = Backbone.Model.extend({
   initialize: function(options) {
+    this.issueModel = options.issueModel;
     // transform the format from the server into something that our templates
     // are expecting.
     var milestones = [];
@@ -24,9 +26,14 @@ issues.MilestonesModel = Backbone.Model.extend({
     );
     this.set("milestones", orderedMilestones);
   },
+
+  // update issueModel.milestone property from here.
   updateMilestone: function(newMilestone) {
     // prevent talking to server in case we somehow got useless data
-    if (!_.isString(newMilestone)) {
+    if (
+      !_.isString(newMilestone) ||
+      newMilestone === this.issueModel.get("milestone")
+    ) {
       return;
     }
 
@@ -48,6 +55,7 @@ issues.MilestonesModel = Backbone.Model.extend({
         });
 
         this.set("milestone", currentMilestone);
+        this.issueModel.set("milestone", currentMilestone.name);
       }, this),
       error: function() {
         var msg = "There was an error editing this issues's status.";
